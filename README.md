@@ -204,6 +204,3 @@ try {
 | `README.md` | This document |
 
 ---
-
-Built as part of my IT Support portfolio — Lab 2 of 10. See the [main portfolio](../README.md) for related labs (GPO, Password Reset Tool, Security Audit, Backup Automation, and more).
->>>>>>> 0df432dd02e1bb9528c4eb1cd0abb551a75017da
