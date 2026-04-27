@@ -37,7 +37,7 @@ corp.local
     └── Workstations
 ```
 
-![OU Structure](screenshots/01-ou-structure.png)
+![OU Structure](screenshots/01-OU-Structure.png)
 
 ## Input Data — HR-Friendly CSV
 
@@ -54,7 +54,7 @@ Daniel,Miller,dmiller,Sales
 
 **Total: 50 users** distributed evenly across 5 departments.
 
-![Sample CSV](screenshots/02-csv-input.png)
+![Sample CSV](screenshots/08-csv-input.png)
 
 ## The Automation Script
 
@@ -86,15 +86,15 @@ Daniel,Miller,dmiller,Sales
 
 All 50 users distributed across the 5 department OUs:
 
-![IT Department Users](screenshots/02-it-department.png)
+![IT Department Users](screenshots/02-IT-Users.png)
 
-![HR Department Users](screenshots/03-hr-department.png)
+![HR Department Users](screenshots/03-HR-Users.png)
 
-![Sales Department Users](screenshots/04-sales-department.png)
+![Sales Department Users](screenshots/04-Sales-Users.png)
 
-![Finance Department Users](screenshots/05-sales-department.png)
+![Finance Department Users](screenshots/05-Finance-Users.png)
 
-![Marketing Department Users](screenshots/06-sales-department.png)
+![Marketing Department Users](screenshots/06-Marketing-Users.png)
 
 ### Sample User Properties
 
