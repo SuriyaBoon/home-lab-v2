@@ -1,6 +1,6 @@
 # Lab 2 — Active Directory Bulk User Provisioning with PowerShell
 
-A real-world IT Support automation project: bulk-provisioning 50 Active Directory user accounts from a CSV file, distributed across 5 organizational units, with auto-assigned departments, forced password reset on first logon, and full error handling.
+A portfolio lab for CSV-based Active Directory user provisioning across five departments. The generated script creates users, assigns a department group, and requires a password change at first logon. Live deployment and performance have not been independently verified.
 
 ## Objective
 
@@ -10,7 +10,7 @@ Solve a common IT Support pain point: HR sends a list of new hires, and IT must 
 - Automatic OU placement based on department
 - Standardized account settings (password policy, UPN, display name)
 - Error handling and progress reporting
-- Repeatable, auditable, and scalable
+- Console progress and success/failure counters
 
 ## Architecture
 
@@ -22,7 +22,11 @@ Solve a common IT Support pain point: HR sends a list of new hires, and IT must 
 
 ### Domain Structure
 
-Forest: **company.local** | NetBIOS: **COMPANY**
+Script target domain: **corp.local**. Prepare the matching OUs and groups before running.
+
+The committed file is a setup wrapper: running it creates `C:\Scripts\Create-BulkUsers.ps1`; it does not itself provision users. Put `Users.csv` at `C:\Users.csv`, inspect the generated script, then run it deliberately inside the disposable AD lab.
+
+The generated target is `OU=Users,OU=<Department>,OU=Corp,DC=corp,DC=local` and the group is `grp-<Department>-All`. Screenshots retain their original capture context; they are not proof of a fresh run against this script.
 
 ```
 corp.local
@@ -73,10 +77,10 @@ Daniel,Miller,dmiller,Sales
 
 ### Key Features
 
-- **Idempotent error handling** — if one user fails, the rest still process
+- **Per-row try/catch** — intended to report failures and continue; this is not idempotency. AD writes currently lack explicit `-ErrorAction Stop`, so some non-terminating errors may bypass the catch block.
 - **Progress indicator** — `[15/50] ✓ Created: jsmith (IT)`
 - **Department auto-routing** — places user in the correct OU automatically
-- **Security baseline** — every account starts with the same temporary password and `ChangePasswordAtLogon = $true`
+- **Lab-only password** — the generated script uses a shared example password and forces a change at next logon. Do not reuse that password or this provisioning pattern for production accounts.
 
 ![Script Execution](screenshots/09-script-output.png)
 
@@ -98,12 +102,12 @@ All 50 users distributed across the 5 department OUs:
 
 ### Sample User Properties
 
-`Get-ADUser jsmith -Properties *` confirms:
+`Get-ADUser jsmith -Properties *` can be used to check the intended current-script state:
 
 - ✅ Account enabled
-- ✅ Located in `OU=IT,DC=company,DC=local`
+- ✅ Located in `OU=Users,OU=IT,OU=Corp,DC=corp,DC=local`
 - ✅ Department field populated
-- ✅ UPN set to `jsmith@company.local`
+- ✅ UPN set to `jsmith@corp.local`
 - ✅ Password change required at next logon
 
 ![User Properties](screenshots/07-user-properties.png)
@@ -114,9 +118,9 @@ All 50 users distributed across the 5 department OUs:
 
 **Symptom:** Users with Thai names or special characters showed as `???` in AD.
 
-**Root cause:** `Import-Csv` defaults to ASCII encoding on older PowerShell versions.
+**Possible cause:** CSV encoding differs from the reader's expected encoding. The current generated script does not select an explicit encoding.
 
-**Fix:**
+**Suggested improvement (not applied in the current script):**
 
 ```powershell
 $users = Import-Csv $csvPath -Encoding UTF8
@@ -130,7 +134,7 @@ $users = Import-Csv $csvPath -Encoding UTF8
 
 **Root cause:** No try/catch block — a single duplicate username crashed the entire loop.
 
-**Fix:** Wrapped `New-ADUser` in `try/catch` so duplicates are logged and skipped:
+**Current limitation:** The script has a `try/catch`, but it has no duplicate pre-check or rollback, and its AD write commands do not explicitly promote non-terminating errors. Review actual AD state after a partial failure; do not assume rerunning is safe.
 
 ```powershell
 try {
@@ -141,7 +145,7 @@ try {
 }
 ```
 
-**Lesson:** Bulk operations must NEVER stop on a single failure. Log and continue.
+**Lesson:** Define which failures should stop the batch, verify partial changes, and make retry behaviour explicit.
 
 ### 3. Password complexity rejection
 
@@ -165,14 +169,7 @@ try {
 
 ## Business Value
 
-| Metric | Before (Manual) | After (Automated) | Improvement |
-|--------|-----------------|-------------------|-------------|
-| Time per user | ~5 minutes | ~2 seconds | **150× faster** |
-| 50-user onboarding | ~4 hours | ~2 minutes | **120× faster** |
-| Human error rate | High | Near zero | Standardized |
-| Audit trail | Manual notes | Console + log | Built-in |
-
-**Real-world scenario:** New hire batch from HR → drop CSV in folder → run script → all accounts ready in under 2 minutes.
+The workflow demonstrates how CSV input can standardize repeated account creation. No measured speedup, error-rate reduction, or production audit coverage is claimed. The current output is console reporting; persistent audit logging and secure per-user initial passwords remain improvements.
 
 ## Tech Stack
 
@@ -198,9 +195,6 @@ try {
 | `Create-BulkUsers.ps1` | Main automation script |
 | `Users.csv` | Sample input (50 users) |
 | `screenshots/` | Verification evidence |
-<<<<<<< HEAD
-| `README.md` | This document |
-=======
 | `README.md` | This document |
 
 ---
